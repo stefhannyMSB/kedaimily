@@ -7,20 +7,35 @@ use Illuminate\Database\Eloquent\Model;
 
 class penjualan extends Model
 {
-    /** @use HasFactory<\Database\Factories\PenjualanFactory> */
     use HasFactory;
-    protected $primaryKey = 'id_penjualan'; // Jangan lupa kalau pakai primary key selain 'id'
-    public $timestamps = false; // Kalau tabel kamu tidak ada created_at, updated_at
+
+    // >>> PENTING: samakan dengan nama tabel sebenarnya di DB
+    protected $table = 'datapenjualans';
+
+    // Primary key kustom
+    protected $primaryKey = 'id_penjualan';
+    public $incrementing = true;
+    protected $keyType = 'int';
+
+    // Jika tabel tidak punya created_at & updated_at
+    public $timestamps = false;
 
     protected $fillable = [
-        'tanggal', 'id_menu', 'jumlah', 'total'
+        'tanggal',
+        'id_menu',
+        'jumlah',
+        'total',
     ];
 
-    // model penjualan
-public function menu()
-{
-    return $this->belongsTo(menu::class, 'id_menu', 'id_menu');
-}
+    protected $casts = [
+        'tanggal' => 'date',
+        'jumlah'  => 'integer',
+        'total'   => 'decimal:2',
+    ];
 
-
+    // Relasi ke tabel menu
+    public function menu()
+    {
+        return $this->belongsTo(menu::class, 'id_menu', 'id_menu');
+    }
 }

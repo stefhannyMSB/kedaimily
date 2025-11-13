@@ -27,34 +27,49 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+    :root { --sidebar-w: 250px; }
+
     #wrapper {
         display: flex;
         height: 100vh;
         overflow: hidden;
     }
 
+    /* ===== SIDEBAR (ikuti partial sidebar) ===== */
     #accordionSidebar {
         position: sticky;
         top: 0;
         height: 100vh;
         overflow-y: auto;
-        width: 250px;
-        background-color: #4e73df;
+        width: var(--sidebar-w);
+        background-color: #4e73df; /* ini akan di-override oleh style di partial sidebar, no problem */
         flex-shrink: 0;
+        transform: translateX(0);
+        transition: transform .25s ease;
     }
+    /* saat collapsed (desktop) */
+    #accordionSidebar.collapsed { transform: translateX(calc(-1 * var(--sidebar-w))); }
+    /* saat mobile slide in */
+    #accordionSidebar.show { transform: translateX(0); }
 
+    /* ===== KONTEN ===== */
     #content-wrapper {
         flex: 1;
         display: flex;
         flex-direction: column;
         height: 100vh;
         overflow-y: auto;
+
+        /* OFFSET terhadap sidebar */
+        margin-left: var(--sidebar-w);
+        transition: margin-left .25s ease;
+        background: #f7f9fb;
     }
 
-    #content {
-        flex: 1;
-        overflow-y: auto;
-    }
+    /* Saat sidebar collapsed (desktop) -> konten full width */
+    body.sidebar-collapsed #content-wrapper { margin-left: 0; }
+
+    #content { flex: 1; overflow-y: auto; }
 
     nav.navbar {
         position: sticky;
@@ -62,6 +77,14 @@
         z-index: 1020;
         background-color: #fff;
         box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+        /* Mobile: konten selalu full width, sidebar slide-in dari kiri */
+        #content-wrapper { margin-left: 0 !important; }
+        #accordionSidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+        #accordionSidebar.show { transform: translateX(0); }
     }
     </style>
 
@@ -72,6 +95,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // --- SweetAlert Logout ---
         const logoutLink = document.getElementById('logout-link');
         if (logoutLink) {
             logoutLink.addEventListener('click', function(e) {
@@ -92,17 +116,41 @@
             });
         }
 
-        @if(session('logout_success'))
+        @if (session('logout_success'))
         Swal.fire({
             icon: 'success',
             title: 'Logout berhasil',
-            text: '{{ session('
-            logout_success ') }}',
+            text: "{{ session('logout_success') }}",
             timer: 2500,
             timerProgressBar: true,
             showConfirmButton: false
         });
         @endif
+
+        // --- Sinkron toggle sidebar (desktop & mobile) ---
+        const sidebar   = document.getElementById('accordionSidebar');
+        const toggleBtn = document.getElementById('sidebarToggle'); // ada di partial sidebar
+        function isMobile(){ return window.innerWidth < 992; }
+
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', function(){
+                if (isMobile()){
+                    // mobile -> slide in/out
+                    sidebar.classList.toggle('show');
+                } else {
+                    // desktop -> collapse, konten ikut melebar
+                    sidebar.classList.toggle('collapsed');
+                    document.body.classList.toggle('sidebar-collapsed');
+                }
+            });
+
+            // auto-close pada mobile jika salah satu link sidebar diklik
+            sidebar.querySelectorAll('a.nav-link').forEach(function(a){
+                a.addEventListener('click', function(){
+                    if (isMobile()) sidebar.classList.remove('show');
+                });
+            });
+        }
     });
     </script>
 

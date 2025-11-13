@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="row mx-2 my-1">
-    <h2 class="text-dark">Data Menu</h2>
+    <h2 class="text-dark">DATA PENJUALAN</h2>
 </div>
 
 {{-- SweetAlert success --}}
@@ -11,16 +11,6 @@
 Swal.fire({
     title: 'Sukses!',
     text: '{{ Session::get("success") }}',
-    icon: 'success',
-    confirmButtonText: 'OK'
-});
-</script>
-@endif
-@if (Session::has('deleted'))
-<script>
-Swal.fire({
-    title: 'Dihapus!',
-    text: '{{ Session::get("deleted") }}',
     icon: 'success',
     confirmButtonText: 'OK'
 });
@@ -36,60 +26,114 @@ Swal.fire({
     <div class="card border-0 shadow-sm rounded-4 mx-3 mt-3 mb-3">
       <div class="card-body d-flex flex-wrap gap-2 align-items-center">
         <div class="d-flex flex-wrap gap-2">
-          {{-- Tambah Data --}}
-          <a href="{{ route('menu.create') }}" class="btn btn-success btn-sm d-flex align-items-center action-btn">
+          <a href="{{ route('datapenjualan.create') }}" class="btn btn-success btn-sm d-flex align-items-center action-btn">
             <i class="bi bi-plus-circle me-1"></i> Tambah Data
           </a>
 
-          {{-- Import Data --}}
           <button type="button" class="btn btn-outline-success btn-sm d-flex align-items-center action-btn"
                   data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="bi bi-upload me-1"></i> Import Data
           </button>
+
+          <a href="{{ route('datapenjualan.report', ['bulan' => request('bulan'), 'tahun' => request('tahun')]) }}"
+             class="btn btn-outline-secondary btn-sm d-flex align-items-center action-btn">
+            <i class="bi bi-printer me-1"></i> Cetak Data
+          </a>
         </div>
       </div>
     </div>
 
     {{-- =======================
-         TABEL DATA MENU
+         FILTER BULAN & TAHUN
+    ======================== --}}
+    <div class="card border-0 shadow-sm rounded-4 mx-3 mb-3">
+      <div class="card-body">
+        <form action="{{ route('datapenjualan.index') }}" method="GET" class="row g-3 align-items-end">
+          <div class="col-lg-3 col-md-6">
+            <label for="bulan" class="form-label mb-1">Pilih Bulan</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-calendar3"></i></span>
+              <select name="bulan" id="bulan" class="form-select form-select-sm">
+                <option value="">Semua Bulan</option>
+                @foreach(range(1, 12) as $m)
+                  <option value="{{ $m }}" {{ request('bulan') == $m ? 'selected' : '' }}>
+                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6">
+            <label for="tahun" class="form-label mb-1">Pilih Tahun</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light"><i class="bi bi-calendar2-week"></i></span>
+              <select name="tahun" id="tahun" class="form-select form-select-sm">
+                <option value="">Semua Tahun</option>
+                @foreach($tahunList as $tahun)
+                  <option value="{{ $tahun }}" {{ request('tahun') == $tahun ? 'selected' : '' }}>
+                    {{ $tahun }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-4">
+            <button type="submit" class="btn btn-success btn-sm w-100">
+              <i class="bi bi-funnel me-1"></i> Filter
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {{-- =======================
+         TABEL DATA PENJUALAN
     ======================== --}}
     <div class="card border-0 shadow-sm rounded-4 mx-3 mb-4">
       <div class="card-body">
-        @if($menu->isEmpty())
+        @if($datapenjualan->isEmpty())
           <div class="text-center text-muted py-5">
             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-            Belum ada data menu yang ditampilkan.
+            Belum ada data penjualan yang ditampilkan.
           </div>
         @else
           <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-            <table id="datatables" class="table table-hover table-bordered table-sm align-middle mb-0 w-100">
+            <table id="example" class="table table-hover table-bordered table-sm align-middle mb-0 w-100">
               <thead class="table-success text-center" style="position: sticky; top: 0; z-index: 1020;">
                 <tr>
-                  <th class="text-start" style="width:80px;">No</th>
+                  <th class="text-start">No</th>
+                  <th class="text-start">Tanggal</th>
                   <th class="text-start">Nama Menu</th>
-                  <th class="text-end" style="width:180px;">Harga</th>
-                  <th class="text-center" style="width:140px;">Aksi</th>
+                  <th class="text-center">Jumlah</th>
+                  <th class="text-center" style="width:120px;">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                @foreach ($menu as $item)
+                @foreach ($datapenjualan as $item)
                   <tr>
                     <td class="text-start">{{ $loop->iteration }}</td>
-                    <td class="text-start text-truncate" style="max-width: 320px;">{{ $item->nama_menu }}</td>
-                    <td class="text-end">Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
+                    <td class="text-start">{{ \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') }}</td>
+                    <td class="text-start text-truncate" style="max-width: 260px;">
+                      {{ optional($item->menu)->nama_menu ?? '-' }}
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-light text-dark border">{{ $item->jumlah }}</span>
+                    </td>
                     <td class="text-center">
                       <div class="d-flex justify-content-center gap-1">
-                        <a href="{{ route('menu.edit', $item->id_menu) }}" class="btn btn-secondary btn-sm">
-                          Edit
+                        <a href="{{ route('datapenjualan.edit', $item->id_datapenjualan) }}" class="btn btn-secondary btn-sm">
+                          Ubah
                         </a>
-                        <form id="delete-form-{{ $item->id_menu }}"
-                              action="{{ route('menu.destroy', $item->id_menu) }}"
+                        <form id="delete-form-{{ $item->id_datapenjualan }}"
+                              action="{{ route('datapenjualan.destroy', $item->id_datapenjualan) }}"
                               method="POST">
                           @csrf
                           @method('DELETE')
                           <button type="button"
                                   class="btn btn-danger btn-sm delete-btn"
-                                  data-id="{{ $item->id_menu }}">
+                                  data-id="{{ $item->id_datapenjualan }}">
                             Hapus
                           </button>
                         </form>
@@ -104,27 +148,29 @@ Swal.fire({
       </div>
     </div>
 
-    </div>
     {{-- =======================
-        TOMBOL LOGOUT
+         TOMBOL LOGOUT (tetap disembunyikan)
     ======================== --}}
     <div class="text-center mt-5">
-        <form id="logout-form" action="{{ route('logout') }}" method="POST">
-            @csrf
-            <!-- <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-semibold rounded-3">
-                <i class="bi bi-box-arrow-right me-2"></i> Logout
-            </button> -->
-        </form>
+      <form id="logout-form" action="{{ route('logout') }}" method="POST">
+        @csrf
+        {{-- <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-semibold rounded-3">
+          <i class="bi bi-box-arrow-right me-2"></i> Logout
+        </button> --}}
+      </form>
     </div>
+
+  </div>
 </div>
+
 <!-- Modal Import -->
 <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form action="{{ route('menu.import') }}" method="POST" enctype="multipart/form-data" class="w-100">
+        <form action="{{ route('datapenjualan.import') }}" method="POST" enctype="multipart/form-data" class="w-100">
             @csrf
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="importModalLabel">Import Data menu</h5>
+                    <h5 class="modal-title" id="importModalLabel">Import Data Penjualan</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
@@ -144,22 +190,10 @@ Swal.fire({
     </div>
 </div>
 
-@push('styles')
-<style>
-thead th {
-    position: sticky;
-    top: 0;
-    background-color: #343a40;
-    color: white;
-    z-index: 1020;
-}
-</style>
-@endpush
-
 @push('scripts')
 <script>
 $(document).ready(function() {
-    $('#datatables').DataTable({
+    $('#example').DataTable({
         responsive: true,
         language: {
             search: "Cari:",
@@ -172,7 +206,6 @@ $(document).ready(function() {
         }
     });
 
-    // Konfirmasi sebelum hapus data
     $('.delete-btn').on('click', function() {
         const id = $(this).data('id');
         Swal.fire({

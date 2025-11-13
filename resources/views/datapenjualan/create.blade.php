@@ -8,7 +8,7 @@
                 <h6 class="m-0 font-weight-bold text-secondary">TAMBAH DATA PENJUALAN</h6>
             </div>
             <div class="card-body">
-                <form action="{{ route('penjualan.store') }}" method="POST">
+                <form action="{{ route('datapenjualan.store') }}" method="POST">
                     @csrf
                     <div class="row mx-2 my-2">
 
@@ -52,18 +52,11 @@
                             @enderror
                         </div>
 
-                        {{-- Total --}}
-                        <div class="table mb-3">
-                            <label for="total">Total</label>
-                            <p id="totalDisplay" class="form-control-static">Rp 0</p>
-                            <input type="hidden" name="total" id="totalInput" value="{{ old('total', 0) }}">
-                        </div>
-
                     </div>
 
                     <div class="table">
                         <button type="submit" class="btn btn-success" name="save">Simpan</button>
-                        <a href="{{ route('penjualan.index') }}" class="btn btn-success">Kembali</a>
+                        <a href="{{ route('datapenjualan.index') }}" class="btn btn-success">Kembali</a>
                     </div>
                 </form>
             </div>
@@ -72,33 +65,10 @@
 </div>
 
 <script>
-// Fungsi untuk menghitung total
-function calculateTotal() {
-    var jumlah = document.getElementById('jumlah').value;
-    var menuHarga = null;
-    var totalDisplay = document.getElementById('totalDisplay');
-    var totalInput = document.getElementById('totalInput');
 
-    var selectedOption = document.querySelector("#id_menu option:checked");
-    if (selectedOption) {
-        menuHarga = selectedOption.getAttribute('data-harga');
-    }
 
-    if (!isNaN(jumlah) && jumlah != '' && menuHarga !== null) {
-        var total = jumlah * menuHarga;
-        totalDisplay.textContent = "Rp " + total.toLocaleString();
-        totalInput.value = total;
-    } else {
-        totalDisplay.textContent = "Rp 0";
-        totalInput.value = 0;
-    }
-}
 
-// Event listener untuk input jumlah dan perubahan menu
-document.getElementById('jumlah').addEventListener('input', calculateTotal);
-document.getElementById('id_menu').addEventListener('change', calculateTotal);
 
-// Panggil sekali saat load untuk inisialisasi total
-window.onload = calculateTotal;
+
 </script>
 @endsection

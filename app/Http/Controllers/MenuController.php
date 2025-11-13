@@ -16,29 +16,45 @@ class MenuController extends Controller
             return view ('menu.index', compact('menu'));
         }
     }
+
+    /**
+     * >>> ADD: Halaman MENU untuk USER (read-only) dengan paginate
+     * Route yang memanggil: /user/menu  -> name: user.menu.index
+     * View: resources/views/user/menu/index.blade.php
+     */
+    public function userIndex(Request $request)
+    {
+        $menus = menu::select('id_menu','nama_menu','harga')
+            ->orderBy('id_menu','ASC')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('user.menu.index', compact('menus'));
+    }
+    // <<< END ADD
+
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
         $menu = menu::all(); // ambil data menu untuk select dropdown
-    return view('menu.create', compact('menu')); // kirim ke view
+        return view('menu.create', compact('menu')); // kirim ke view
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-{
-    $validated = $request->validate([
-        'nama_menu' => 'required|string',
-        'harga' => 'required|numeric',
-    ]);
+    {
+        $validated = $request->validate([
+            'nama_menu' => 'required|string',
+            'harga' => 'required|numeric',
+        ]);
 
-    menu::create($validated);
-    return redirect()->route('menu.index')->with('success', 'menu berhasil ditambahkan!');
-}
-
+        menu::create($validated);
+        return redirect()->route('menu.index')->with('success', 'menu berhasil ditambahkan!');
+    }
 
     /**
      * Display the specified resource.
@@ -67,9 +83,6 @@ class MenuController extends Controller
             'harga' => 'required|numeric',
         ]);
 
-        // Debug: cek data yang diterima
-        // dd($validated);
-
         // Update menu
         $menu->update($validated);
 
@@ -81,7 +94,6 @@ class MenuController extends Controller
         $request->validate([
             'file' => 'required|mimes:xlsx'
         ]);
-
 
         Excel::import(new menuImport, $request->file('file'));
 

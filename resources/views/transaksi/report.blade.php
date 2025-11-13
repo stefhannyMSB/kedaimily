@@ -93,13 +93,13 @@
         }
     }
     </style>
-    <title>CETAK DATA PENJUALAN</title>
+    <title>CETAK DATA TRANSAKSI</title>
 </head>
 
 <body>
     <div class="container">
         <div class="header">
-            <h1>Laporan Data Penjualan</h1>
+            <h1>Laporan Data Transaksi</h1>
             @php
             use Carbon\Carbon;
 
@@ -130,7 +130,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($penjualan as $item)
+                @foreach ($transaksi as $item)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d F Y') }}</td>

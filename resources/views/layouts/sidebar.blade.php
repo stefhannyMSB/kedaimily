@@ -1,242 +1,155 @@
 @php
-$active = fn($route) => Request::is($route) ? 'active' : '';
+    // active helper + role
+    $active = function ($patterns = []) {
+        foreach ((array)$patterns as $p) {
+            if (request()->routeIs($p) || request()->is($p)) return 'active';
+        }
+        return '';
+    };
+    $role = auth()->user()->role ?? 'user';
 @endphp
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-
 <style>
-/* ========== SIDEBAR BASE ========== */
-#accordionSidebar {
+:root{ --sidebar-w:250px; }
+
+/* ===== SIDEBAR ===== */
+#accordionSidebar{
     background: linear-gradient(180deg, #a3f3a0 0%, #72d85d 100%);
     font-family: 'Poppins', sans-serif;
-    width: 250px;
+    width: var(--sidebar-w);
     height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
+    position: fixed; top:0; left:0;
     z-index: 1030;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    display:flex; flex-direction:column;
     padding: 1.5rem 1.25rem;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease-in-out;
-    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0,0,0,.08);
+    overflow-y:auto;
+    transform: translateX(0);
+    transition: transform .25s ease;
+}
+#accordionSidebar.collapsed{ transform: translateX(calc(-1 * var(--sidebar-w))); }
+
+.sidebar-brand{
+    font-size: 1.6rem; font-weight:700; color:#b44545ff;
+    text-align:center; letter-spacing:1px;
+    margin-bottom: 1.5rem; padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.5);
+}
+.nav-item{ list-style:none; margin-bottom:.85rem; }
+.nav-link{
+    display:flex; align-items:center; gap:.75rem;
+    padding:.7rem 1rem; border-radius:10px;
+    color:#202020; text-decoration:none; font-weight:500;
+    transition: all .2s ease;
+}
+.nav-link i{ width:22px; text-align:center; font-size:1.2rem; }
+.nav-link:hover{ background:rgba(255,255,255,.5); transform: translateX(4px); }
+.nav-link.active{
+    background:#f9d94a; color:#ba1010ff !important; font-weight:600;
+    border-left:4px solid #e8c933; box-shadow: inset 0 0 6px rgba(0,0,0,.12);
 }
 
-/* Saat disembunyikan */
-#accordionSidebar.collapsed {
-    transform: translateX(-260px);
+.sidebar-divider{ height:1px; background:rgba(255,255,255,.5); margin:1.25rem 0; }
+
+.logout-container{ margin-top:auto; border-top:1px solid rgba(255,255,255,.5); padding-top:1rem; }
+.nav-link.text-danger{
+    background:rgba(255,255,255,.3); color:#c62828!important; border-left:4px solid #c62828;
 }
 
-/* ========== BRAND ========== */
-.sidebar-brand {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #b44545ff;
-    text-align: center;
-    letter-spacing: 1px;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-    padding-bottom: 1rem;
+/* ===== TOGGLER ===== */
+#sidebarToggle{
+    position: fixed; top:14px; left:14px; z-index:1100;
+    width:46px; height:46px; border:none; border-radius:12px;
+    background:rgba(33,33,33,.85); color:#fff; font-size:24px;
+    display:none; align-items:center; justify-content:center; cursor:pointer;
 }
+#sidebarToggle:hover{ background:rgba(0,0,0,.95); }
 
-/* ========== NAVIGATION ========== */
-.nav-item {
-    list-style: none;
-    margin-bottom: 1rem;
-}
-
-.nav-link {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    color: #202020;
-    font-weight: 500;
-    text-decoration: none;
-    border-radius: 10px;
-    transition: all 0.25s ease-in-out;
-    background-color: transparent;
-}
-
-.nav-link i {
-    font-size: 1.2rem;
-    width: 22px;
-    text-align: center;
-}
-
-.nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-    color: #000;
-    transform: translateX(5px);
-}
-
-/* Active link */
-.nav-link.active {
-    background-color: #f9d94a;
-    color: #ba1010ff !important;
-    font-weight: 600;
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.15);
-    border-left: 4px solid #e8c933;
-}
-
-/* Divider */
-.sidebar-divider {
-    height: 1px;
-    background-color: rgba(255, 255, 255, 0.5);
-    margin: 1.5rem 0;
-}
-
-/* Logout di bagian bawah (sticky) */
-.logout-container {
-    margin-top: auto;
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
-    padding-top: 1.25rem;
-}
-
-.nav-link.text-danger {
-    background-color: rgba(255, 255, 255, 0.3);
-    color: #c62828 !important;
-    border-left: 4px solid #c62828;
-    transition: all 0.2s ease-in-out;
-}
-
-.nav-link.text-danger:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-/* ========== TOGGLE BUTTON ========== */
-#sidebarToggle {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 1100;
-    background: rgba(33, 33, 33, 0.85);
-    color: #fff;
-    border: none;
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    font-size: 24px;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.25s ease;
-}
-
-#sidebarToggle:hover {
-    background-color: rgba(0, 0, 0, 0.95);
-}
-
-/* ========== MAIN CONTENT ========== */
-#mainContent {
-    margin-left: 185px;
-    transition: margin-left 0.3s ease;
-    background-color: #f9fafb;
+/* ===== MAIN CONTENT OFFSET ===== */
+#mainContent{
+    margin-left: var(--sidebar-w);
+    padding: 24px;
     min-height: 100vh;
-    padding: 2rem;
+    background:#f7f9fb;
+    transition: margin-left .25s ease;
 }
+/* saat sidebar collapsed (desktop) ATAU pada mobile */
+body.sidebar-collapsed #mainContent{ margin-left: 0; }
 
-#mainContent.expanded {
-    margin-left: 0;
-}
-
-/* ========== RESPONSIVE ========== */
-@media (max-width: 992px) {
-    #sidebarToggle {
-        display: flex;
-    }
-
-    #accordionSidebar {
-        transform: translateX(-260px);
-        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.25);
-        width: 240px;
-    }
-
-    #accordionSidebar.show {
-        transform: translateX(0);
-    }
-
-    #mainContent {
-        margin-left: 0 !important; */
-    }
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px){
+    #sidebarToggle{ display:flex; }
+    #accordionSidebar{ transform: translateX(calc(-1 * var(--sidebar-w))); }
+    #accordionSidebar.show{ transform: translateX(0); }
+    /* mobile = konten full width */
+    #mainContent{ margin-left:0; }
 }
 </style>
 
-<!-- ========== TOGGLE BUTTON ========== -->
 <button id="sidebarToggle" aria-label="Toggle sidebar">
     <i class="bi bi-list"></i>
 </button>
 
-<!-- ========== SIDEBAR ========== -->
 <ul class="navbar-nav" id="accordionSidebar">
     <!-- Brand -->
-    <a class="sidebar-brand" href="{{ url('/') }}">
-        <i class="bi bi-shop-window me-2"></i> KEDAI MILY
+    <a class="sidebar-brand" href="{{ $role==='admin' ? route('dashboard') : route('user.dashboard') }}">
+        <i class="bi bi-shop-window me-2"></i>KEDAI MILY
     </a>
 
-    <!-- Menu Utama -->
-    <li class="nav-item">
-        <a class="nav-link {{ $active('/') }}" href="{{ url('/') }}">
-            Dashboard
-        </a>
-    </li>
+    @if ($role === 'admin')
+        <li class="nav-item">
+            <a class="nav-link {{ $active(['dashboard']) }}" href="{{ route('dashboard') }}">
+                </i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item"><a class="nav-link {{ $active(['menu.*']) }}" href="{{ route('menu.index') }}"></i> Data Menu</a></li>
+        <li class="nav-item"><a class="nav-link {{ $active(['transaksi.*']) }}" href="{{ route('transaksi.index') }}"></i> Data Transaksi</a></li>
+        <li class="nav-item"><a class="nav-link {{ $active(['datapenjualan.*']) }}" href="{{ route('datapenjualan.index') }}"></i> Data Penjualan</a></li>
+        <li class="nav-item"><a class="nav-link {{ $active(['peramalan.*']) }}" href="{{ route('peramalan.index') }}"></i> Peramalan (DES)</a></li>
+        <div class="sidebar-divider"></div>
+        <li class="nav-item"><a class="nav-link {{ $active(['admin.users.*']) }}" href="{{ route('admin.users.index') }}"><i class="bi bi-people"></i> Manajemen User</a></li>
+    @else
+        <li class="nav-item">
+            <a class="nav-link {{ $active(['user.dashboard']) }}" href="{{ route('user.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item"><a class="nav-link {{ $active(['user.menu.*']) }}" href="{{ route('user.menu.index') }}"><i class="bi bi-utensils"></i> Menu</a></li>
+        
+    @endif
 
-    <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('menu.*') ? 'active' : '' }}" href="{{ route('menu.index') }}">
-            Data Menu
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('penjualan.*') ? 'active' : '' }}" href="{{ route('penjualan.index') }}">
-            Data penjualan
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('peramalan.*') ? 'active' : '' }}" href="{{ route('peramalan.index') }}">
-           Peramalan
-        </a>
-    </li>
-    <!-- Logout (sticky bottom) -->
     <div class="logout-container">
         <li class="nav-item">
             <a class="nav-link text-danger" href="#"
-                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                <i class="bi bi-box-arrow-right"></i> Logout
+               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+               <i class="bi bi-box-arrow-right"></i> Logout
             </a>
         </li>
     </div>
 </ul>
 
-<!-- ========== MAIN CONTENT ========== -->
-<div id="mainContent">
-    {{-- Konten utama halaman di sini --}}
-</div>
+<form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
 
-<!-- ========== SCRIPT ========== -->
 <script>
-const sidebar = document.getElementById('accordionSidebar');
+const sidebar   = document.getElementById('accordionSidebar');
 const toggleBtn = document.getElementById('sidebarToggle');
-const mainContent = document.getElementById('mainContent');
 
-toggleBtn.addEventListener('click', () => {
-    if (window.innerWidth < 992) {
-        sidebar.classList.toggle('show');
-    } else {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-    }
-});
+function isMobile(){ return window.innerWidth < 992; }
 
-sidebar.querySelectorAll('a.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-        if (window.innerWidth < 992) {
-            sidebar.classList.remove('show');
-        }
-    });
+function toggleSidebar(){
+  if (isMobile()){
+    sidebar.classList.toggle('show'); // slide in/out
+  }else{
+    sidebar.classList.toggle('collapsed');           // geser sidebar
+    document.body.classList.toggle('sidebar-collapsed'); // konten ikut geser
+  }
+}
+toggleBtn.addEventListener('click', toggleSidebar);
+
+// auto-close di mobile saat klik menu
+sidebar.querySelectorAll('a.nav-link').forEach(a=>{
+  a.addEventListener('click', ()=>{ if(isMobile()) sidebar.classList.remove('show'); });
 });
 </script>

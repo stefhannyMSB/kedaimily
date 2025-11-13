@@ -21,26 +21,75 @@ class PeramalanController extends Controller
         $dataAktual = [];
 
         if ($request->filled(['id_menu', 'tanggal_awal', 'tanggal_akhir'])) {
-            $id_menu = $request->id_menu;
-            $tanggal_awal = $request->tanggal_awal;
+            $id_menu       = $request->id_menu;
+            $tanggal_awal  = $request->tanggal_awal;
             $tanggal_akhir = $request->tanggal_akhir;
+
+            // Periode ('harian' | 'mingguan' | 'bulanan'), default harian
+            $periode       = $request->get('periode', 'harian');
             $selectedAlpha = $request->filled('alpha') ? (float)$request->alpha : 0.1;
 
-            // 🔹 Ambil data penjualan per hari
-            $penjualan = DB::table('penjualans')
-                ->selectRaw('DATE(tanggal) as tanggal, SUM(jumlah) as total_jual')
-                ->where('id_menu', $id_menu)
-                ->whereBetween('tanggal', [$tanggal_awal, $tanggal_akhir])
-                ->groupBy('tanggal')
-                ->orderBy('tanggal', 'asc')
-                ->get();
+            // === Ambil data transaksi per-periode ===
+            if ($periode === 'mingguan') {
+                // Mingguan (ISO: minggu mulai Senin)
+                $transaksi = DB::table('transaksis')
+                    ->selectRaw("
+                        YEARWEEK(tanggal, 1) as yw,
+                        MIN(DATE(tanggal)) as start_week,
+                        SUM(jumlah) as total_jual
+                    ")
+                    ->where('id_menu', $id_menu)
+                    ->whereBetween('tanggal', [$tanggal_awal, $tanggal_akhir])
+                    ->groupBy('yw')
+                    ->orderBy('start_week', 'asc')
+                    ->get();
 
-            if ($penjualan->isNotEmpty()) {
-                $tanggalList = $penjualan->pluck('tanggal')->toArray();
-                $dataAktual = $penjualan->pluck('total_jual')->toArray();
+                if ($transaksi->isNotEmpty()) {
+                    $tanggalList = $transaksi->pluck('start_week')->toArray();  // label = tanggal awal minggu (Senin)
+                    $dataAktual  = $transaksi->pluck('total_jual')->toArray();
+                }
 
-                // 🔹 Evaluasi alpha 0.1 - 0.9
+            } elseif ($periode === 'bulanan') {
+                // Bulanan: label = tanggal hari pertama di bulan tsb (YYYY-MM-01)
+                $transaksi = DB::table('transaksis')
+                    ->selectRaw("
+                        YEAR(tanggal) as yy,
+                        MONTH(tanggal) as mm,
+                        DATE_FORMAT(DATE(tanggal), '%Y-%m-01') as start_month,
+                        SUM(jumlah) as total_jual
+                    ")
+                    ->where('id_menu', $id_menu)
+                    ->whereBetween('tanggal', [$tanggal_awal, $tanggal_akhir])
+                    ->groupBy('yy','mm','start_month')
+                    ->orderBy('start_month', 'asc')
+                    ->get();
+
+                if ($transaksi->isNotEmpty()) {
+                    $tanggalList = $transaksi->pluck('start_month')->toArray(); // label = 1 tgl tiap bulan
+                    $dataAktual  = $transaksi->pluck('total_jual')->toArray();
+                }
+
+            } else {
+                // Harian (default)
+                $transaksi = DB::table('transaksis')
+                    ->selectRaw('DATE(tanggal) as tanggal, SUM(jumlah) as total_jual')
+                    ->where('id_menu', $id_menu)
+                    ->whereBetween('tanggal', [$tanggal_awal, $tanggal_akhir])
+                    ->groupBy('tanggal')
+                    ->orderBy('tanggal', 'asc')
+                    ->get();
+
+                if ($transaksi->isNotEmpty()) {
+                    $tanggalList = $transaksi->pluck('tanggal')->toArray();
+                    $dataAktual  = $transaksi->pluck('total_jual')->toArray();
+                }
+            }
+
+            // === Perhitungan DES bila ada data ===
+            if (!empty($dataAktual)) {
                 for ($alpha = 0.1; $alpha <= 0.9; $alpha += 0.1) {
+                    $alpha = round($alpha, 1);
+
                     $S1 = [];
                     $S2 = [];
                     $level = [];
@@ -49,8 +98,8 @@ class PeramalanController extends Controller
                     $errors = [];
 
                     foreach ($dataAktual as $t => $x) {
-                        if ($t == 0) {
-                            // Inisialisasi nilai pertama
+                        if ($t === 0) {
+                            // inisialisasi
                             $S1[$t] = $x;
                             $S2[$t] = $x;
                             $level[$t] = $x;
@@ -58,71 +107,92 @@ class PeramalanController extends Controller
                             $forecast[$t] = null;
                             $errors[$t] = null;
                         } else {
-                            // Hitung Single dan Double Exponential Smoothing
+                            // smoothing
                             $S1[$t] = $alpha * $x + (1 - $alpha) * $S1[$t - 1];
                             $S2[$t] = $alpha * $S1[$t] + (1 - $alpha) * $S2[$t - 1];
 
-                            // Hitung Level dan Trend
+                            // level & trend
                             $level[$t] = 2 * $S1[$t] - $S2[$t];
                             $trend[$t] = ($alpha / (1 - $alpha)) * ($S1[$t] - $S2[$t]);
 
-                            // Forecast untuk periode t (menggunakan nilai sebelumnya)
+                            // forecast periode t pakai level & trend periode sebelumnya
                             $forecast[$t] = $level[$t - 1] + $trend[$t - 1];
 
-                            // Error absolut
+                            // error absolut
                             $errors[$t] = abs($x - $forecast[$t]);
                         }
                     }
 
-                    // Hitung MAE dan MAPE
-                    $validErrors = array_filter($errors);
+                    // MAE
+                    $validErrors = array_filter($errors, fn($e) => $e !== null);
                     $mae = count($validErrors) ? array_sum($validErrors) / count($validErrors) : 0;
 
-                    $mape = 0;
+                    // MAPE
+                    $mapeSum = 0;
                     $validMAPE = 0;
                     foreach ($dataAktual as $i => $val) {
                         if ($i > 0 && $val != 0 && isset($forecast[$i])) {
-                            $mape += abs(($val - $forecast[$i]) / $val);
+                            $mapeSum += abs(($val - $forecast[$i]) / $val);
                             $validMAPE++;
                         }
                     }
-                    $mape = $validMAPE ? ($mape / $validMAPE) * 100 : 0;
+                    $mape = $validMAPE ? ($mapeSum / $validMAPE) * 100 : 0;
 
                     $alphaEvaluations[] = [
-                        'alpha' => round($alpha, 1),
-                        'mae' => round($mae, 3),
-                        'mape' => round($mape, 3)
+                        'alpha'   => $alpha,
+                        'mae'     => round($mae, 3),
+                        'mape'    => round($mape, 3),
+                        'periode' => $periode,
                     ];
 
-                    // Simpan hasil untuk alpha terpilih
+                    // simpan detail untuk alpha terpilih
                     if (abs($alpha - $selectedAlpha) < 0.001) {
                         $results = [
-                            'alpha' => $selectedAlpha,
-                            'tanggal' => $tanggalList,
-                            'aktual' => $dataAktual,
-                            'S1' => $S1,
-                            'S2' => $S2,
-                            'level' => $level,
-                            'trend' => $trend,
+                            'alpha'    => $selectedAlpha,
+                            'periode'  => $periode,
+                            'tanggal'  => $tanggalList,
+                            'aktual'   => $dataAktual,
+                            'S1'       => $S1,
+                            'S2'       => $S2,
+                            'level'    => $level,
+                            'trend'    => $trend,
                             'forecast' => $forecast,
-                            'error' => $errors
+                            'error'    => $errors
                         ];
                     }
                 }
 
-                // 🔹 Cari alpha terbaik
-                $bestAlphaMAE = collect($alphaEvaluations)->sortBy('mae')->first();
+                // Alpha terbaik
+                $bestAlphaMAE  = collect($alphaEvaluations)->sortBy('mae')->first();
                 $bestAlphaMAPE = collect($alphaEvaluations)->sortBy('mape')->first();
 
-                // 🔹 Forecast 2 hari ke depan
-                if (!empty($level) && !empty($trend)) {
-                    $lastLevel = end($level);
-                    $lastTrend = end($trend);
-                    $lastDate = Carbon::parse(end($tanggalList));
+                // === Forecast ke depan (2 periode) ===
+                // Periode = hari (harian), minggu (mingguan), bulan (bulanan)
+                if (!empty($results['level']) && !empty($results['trend'])) {
+                    $lastLevel = end($results['level']);
+                    $lastTrend = end($results['trend']);
 
-                    for ($i = 1; $i <= 2; $i++) {
-                        $nextDate = $lastDate->copy()->addDays($i)->format('Y-m-d');
-                        $forecastNextDays[$nextDate] = $lastLevel + $i * $lastTrend;
+                    $lastLabel = end($tanggalList);
+                    $lastDate  = Carbon::parse($lastLabel);
+
+                    if ($periode === 'mingguan') {
+                        // label = tanggal awal minggu berikutnya
+                        for ($i = 1; $i <= 2; $i++) {
+                            $nextStartOfWeek = $lastDate->copy()->startOfWeek(Carbon::MONDAY)->addWeeks($i);
+                            $forecastNextDays[$nextStartOfWeek->format('Y-m-d')] = $lastLevel + $i * $lastTrend;
+                        }
+                    } elseif ($periode === 'bulanan') {
+                        // label = tanggal awal bulan berikutnya
+                        for ($i = 1; $i <= 2; $i++) {
+                            $nextStartOfMonth = $lastDate->copy()->startOfMonth()->addMonths($i);
+                            $forecastNextDays[$nextStartOfMonth->format('Y-m-d')] = $lastLevel + $i * $lastTrend;
+                        }
+                    } else {
+                        // harian
+                        for ($i = 1; $i <= 2; $i++) {
+                            $nextDate = $lastDate->copy()->addDays($i)->format('Y-m-d');
+                            $forecastNextDays[$nextDate] = $lastLevel + $i * $lastTrend;
+                        }
                     }
                 }
             }
