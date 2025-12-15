@@ -21,6 +21,67 @@
         </div>
     </div>
 
+    <div class="d-flex gap-3 mt-4 flex-wrap">
+
+    {{-- Card Menu 1 --}}
+    <div class="card shadow-sm border-0 rounded-4 p-3" style="width: 220px;">
+        <div class="rounded-4 bg-light d-flex align-items-center justify-content-center"
+             style="height: 140px; overflow: hidden;">
+           <img src="{{ asset('img/nasgem.jpeg') }}"
+           alt="Gambar Menu"
+           style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="text-center mt-3">
+            <h6 class="fw-bold mb-1">Nasgem (Nasi Gembira)</h6>
+            <p class="text-success fw-semibold mb-0">Rp 12.000</p>
+        </div>
+    </div>
+
+    {{-- Card Menu 2 --}}
+    <div class="card shadow-sm border-0 rounded-4 p-3" style="width: 220px;">
+        <div class="rounded-4 bg-light d-flex align-items-center justify-content-center"
+             style="height: 140px; overflow: hidden;">
+            <img src="{{ asset('img/SSAS.jpeg') }}"
+           alt="Gambar Menu"
+           style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="text-center mt-3">
+            <h6 class="fw-bold mb-1">Sego sambel ayam suwir</h6>
+            <p class="text-success fw-semibold mb-0">Rp 6.000</p>
+        </div>
+    </div>
+
+    {{-- Card Menu 3 --}}
+    <div class="card shadow-sm border-0 rounded-4 p-3" style="width: 220px;">
+        <div class="rounded-4 bg-light d-flex align-items-center justify-content-center"
+             style="height: 140px; overflow: hidden;">
+            <img src="{{ asset('img/AG.jpeg') }}"
+                 alt="Gambar Menu"
+                 style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="text-center mt-3">
+            <h6 class="fw-bold mb-1">Ayam Geprek Ceria</h6>
+            <p class="text-success fw-semibold mb-0">Rp 15.000</p>
+        </div>
+    </div>
+
+
+    {{-- Card Menu 4 --}}
+    <div class="card shadow-sm border-0 rounded-4 p-3" style="width: 220px;">
+        <div class="rounded-4 bg-light d-flex align-items-center justify-content-center"
+             style="height: 140px; overflow: hidden;">
+            <img src="{{ asset('img/Donat.jpeg') }}"
+                 alt="Gambar Menu"
+                 style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="text-center mt-3">
+            <h6 class="fw-bold mb-1">Donat Mentul</h6>
+            <p class="text-success fw-semibold mb-0">Rp 5.000</p>
+        </div>
+    </div>
+
+</div>
+
     {{-- =========================
         TENTANG KEDAI MILY (Expandable)
     ========================== --}}
