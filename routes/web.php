@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:user,admin')->prefix('user')->name('user.')->group(function () {
         Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
         Route::get('/menu', [MenuController::class, 'userIndex'])->name('menu.index');
-        //Route::get('/peramalan', [PeramalanController::class, 'index'])->name('peramalan.index');
+        //
+        // Route::get('/peramalan', [PeramalanController::class, 'index'])->name('peramalan.index');
     });
 });

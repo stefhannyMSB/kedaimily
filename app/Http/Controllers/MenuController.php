@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\menu;
+use App\Models\Menu;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\menuImport;
+use App\Imports\MenuImport;
 
 class MenuController extends Controller
 {
     public function index()
     {
         {
-            $menu = menu::orderBy('id_menu','ASC')->get();
+            $menu = Menu::orderBy('id_menu','ASC')->get();
             return view ('menu.index', compact('menu'));
         }
     }
@@ -24,7 +24,7 @@ class MenuController extends Controller
      */
     public function userIndex(Request $request)
     {
-        $menus = menu::select('id_menu','nama_menu','harga')
+        $menus = Menu::select('id_menu','nama_menu','harga')
             ->orderBy('id_menu','ASC')
             ->paginate(10)
             ->withQueryString();
@@ -38,7 +38,7 @@ class MenuController extends Controller
      */
     public function create()
     {
-        $menu = menu::all(); // ambil data menu untuk select dropdown
+        $menu = Menu::all(); // ambil data menu untuk select dropdown
         return view('menu.create', compact('menu')); // kirim ke view
     }
 
@@ -52,14 +52,14 @@ class MenuController extends Controller
             'harga' => 'required|numeric',
         ]);
 
-        menu::create($validated);
+        Menu::create($validated);
         return redirect()->route('menu.index')->with('success', 'menu berhasil ditambahkan!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(menu $menu)
+    public function show(Menu $menu)
     {
         //
     }
@@ -67,7 +67,7 @@ class MenuController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(menu $menu)
+    public function edit(Menu $menu)
     {
         return view('menu.edit', compact('menu'));
     }
@@ -75,7 +75,7 @@ class MenuController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, menu $menu)
+    public function update(Request $request, Menu $menu)
     {
         // Validasi data
         $validated = $request->validate([
@@ -95,7 +95,7 @@ class MenuController extends Controller
             'file' => 'required|mimes:xlsx'
         ]);
 
-        Excel::import(new menuImport, $request->file('file'));
+        Excel::import(new MenuImport, $request->file('file'));
 
         return redirect()->route('menu.index')->with('success', 'Data berhasil diimport!');
     }
@@ -106,7 +106,7 @@ class MenuController extends Controller
     public function destroy(Request $request, $id_menu)
     {
         // Mencari menu berdasarkan id_menu
-        $menu = menu::findOrFail($id_menu);  // menggunakan id_menu langsung
+        $menu = Menu::findOrFail($id_menu);  // menggunakan id_menu langsung
         $menu->delete(); // Hapus menu
     
         return redirect()->route('menu.index')->with('deleted', 'Data berhasil dihapus.');

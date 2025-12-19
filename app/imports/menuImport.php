@@ -7,7 +7,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Illuminate\Support\Str;
 
-class menuImport implements ToModel, WithStartRow
+class MenuImport implements ToModel, WithStartRow
 {
     public function startRow(): int
     {
@@ -23,7 +23,7 @@ class menuImport implements ToModel, WithStartRow
         $slug = Str::slug($namamenuExcel);
 
         // Cek apakah menu dengan slug yang sama sudah ada
-        $existing = menu::all()->first(function ($item) use ($slug) {
+        $existing = Menu::all()->first(function ($item) use ($slug) {
             return Str::slug($item->nama_menu) === $slug;
         });
 
@@ -32,7 +32,7 @@ class menuImport implements ToModel, WithStartRow
             return null;
         }
 
-        return new menu([
+        return new Menu([
             'nama_menu' => $namamenuExcel,
             'harga' => $harga,
         ]);

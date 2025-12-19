@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\menu;
+use App\Models\Menu;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -12,7 +12,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // Kartu ringkas
-        $jumlahMenu = menu::count();
+        $jumlahMenu = Menu::count();
 
         // Jumlah transaksi (sesuai kode kamu sekarang)
         $totalTransaksi = DB::table('transaksis')->count();
