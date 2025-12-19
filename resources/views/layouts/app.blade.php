@@ -80,11 +80,32 @@
     }
 
     /* ===== RESPONSIVE ===== */
-    @media (max-width: 992px) {
-        /* Mobile: konten selalu full width, sidebar slide-in dari kiri */
+    /* ===== RESPONSIVE ===== */
+    
+    /* Prevent horizontal scroll globally */
+    body { overflow-x: hidden; }
+
+    /* TABLET & MOBILE (< 992px) */
+    @media (max-width: 991.98px) {
+        /* Konten full width, sidebar hidden/slide-in */
         #content-wrapper { margin-left: 0 !important; }
-        #accordionSidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+        
+        #accordionSidebar { 
+            transform: translateX(calc(-1 * var(--sidebar-w))); 
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Show sidebar when toggled */
         #accordionSidebar.show { transform: translateX(0); }
+    }
+
+    /* MOBILE SPECIFIC (< 576px) */
+    @media (max-width: 575.98px) {
+        /* Tweak sidebar width if needed for very small screens, or keep standard */
+        :root { --sidebar-w: 240px; }
+        
+        /* Ensure specific padding fixes */
+        .container-fluid { padding-left: 1rem; padding-right: 1rem; }
     }
     </style>
 
@@ -128,31 +149,13 @@
         @endif
 
         // --- Sinkron toggle sidebar (desktop & mobile) ---
-        const sidebar   = document.getElementById('accordionSidebar');
-        const toggleBtn = document.getElementById('sidebarToggle'); // ada di partial sidebar
-        function isMobile(){ return window.innerWidth < 992; }
-
-        if (toggleBtn && sidebar) {
-            toggleBtn.addEventListener('click', function(){
-                if (isMobile()){
-                    // mobile -> slide in/out
-                    sidebar.classList.toggle('show');
-                } else {
-                    // desktop -> collapse, konten ikut melebar
-                    sidebar.classList.toggle('collapsed');
-                    document.body.classList.toggle('sidebar-collapsed');
-                }
-            });
-
-            // auto-close pada mobile jika salah satu link sidebar diklik
-            sidebar.querySelectorAll('a.nav-link').forEach(function(a){
-                a.addEventListener('click', function(){
-                    if (isMobile()) sidebar.classList.remove('show');
-                });
-            });
-        }
+        // Logic ini sudah ada di sidebar.blade.php, kita hapus yang di sini agar tidak konflik/double event.
+        // Cukup pastikan sidebar.blade.php diload.
     });
     </script>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebarOverlay" class="d-none"></div>
 
     <!-- Page Wrapper -->
     <div id="wrapper">

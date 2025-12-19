@@ -31,35 +31,37 @@
 
     <div class="card shadow-lg border-0 rounded-4">
         <div class="card-body">
-            <table class="table table-bordered table-hover align-middle text-center mb-0">
-                <thead class="table-success">
-                    <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 60%;">Kategori Data</th>
-                        <th style="width: 35%;">Jumlah</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td class="fw-semibold text-start">
-                            <i class="bi bi-egg-fried text-success me-2"></i> Jumlah Menu
-                        </td>
-                        <td>
-                            <span class="badge bg-success fs-5 px-3 py-2">{{ $jumlahMenu }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td class="fw-semibold text-start">
-                            <i class="bi bi-receipt text-info me-2"></i> Jumlah Transaksi
-                        </td>
-                        <td>
-                            <span class="badge bg-info fs-5 px-3 py-2">{{ $totalTransaksi }}</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-center mb-0">
+                    <thead class="table-success">
+                        <tr>
+                            <th style="width: 5%;">No</th>
+                            <th style="width: 60%;">Kategori Data</th>
+                            <th style="width: 35%;">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td class="fw-semibold text-start">
+                                <i class="bi bi-egg-fried text-success me-2"></i> Jumlah Menu
+                            </td>
+                            <td>
+                                <span class="badge bg-success fs-5 px-3 py-2">{{ $jumlahMenu }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td class="fw-semibold text-start">
+                                <i class="bi bi-receipt text-info me-2"></i> Jumlah Transaksi
+                            </td>
+                            <td>
+                                <span class="badge bg-info fs-5 px-3 py-2">{{ $totalTransaksi }}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

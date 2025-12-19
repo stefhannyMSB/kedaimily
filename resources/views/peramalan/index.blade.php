@@ -77,7 +77,7 @@
 
             {{-- Aksi --}}
             <div class="col-lg-1 col-md-6 d-flex gap-2 justify-content-end">
-                <button type="submit" class="btn btn-success btn-sm px-3 w-1000">
+                <button type="submit" class="btn btn-success btn-sm px-3 w-100">
                      Hitung
                 </button>
             </div>
