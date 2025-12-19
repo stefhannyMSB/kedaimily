@@ -206,7 +206,8 @@ $(document).ready(function() {
         }
     });
 
-    $('.delete-btn').on('click', function() {
+    // Konfirmasi sebelum hapus data
+    $(document).on('click', '.delete-btn', function() {
         const id = $(this).data('id');
         Swal.fire({
             title: 'Apakah kamu yakin?',
