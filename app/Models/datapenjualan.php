@@ -13,7 +13,7 @@ class Datapenjualan extends Model
     public $timestamps = false; // Kalau tabel kamu tidak ada created_at, updated_at
 
     protected $fillable = [
-        'tanggal', 'id_menu', 'jumlah'
+        'kode_pesanan', 'tanggal', 'id_menu', 'jumlah'
     ];
 
     // model penjualan

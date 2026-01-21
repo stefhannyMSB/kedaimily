@@ -75,6 +75,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:user,admin')->prefix('user')->name('user.')->group(function () {
         Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
         Route::get('/menu', [MenuController::class, 'userIndex'])->name('menu.index');
+        Route::get('/checkout', [\App\Http\Controllers\User\MenuController::class, 'checkout'])->name('checkout');
+        Route::get('/order-success', [\App\Http\Controllers\User\MenuController::class, 'orderSuccess'])->name('order.success');
         //
         // Route::get('/peramalan', [PeramalanController::class, 'index'])->name('peramalan.index');
     });

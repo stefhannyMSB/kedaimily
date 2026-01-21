@@ -12,4 +12,14 @@ class MenuController extends Controller
         $menus = DB::table('menus')->orderBy('id_menu')->paginate(10);
         return view('user.menu.index', compact('menus'));
     }
+
+    public function checkout()
+    {
+        return view('user.checkout');
+    }
+
+    public function orderSuccess()
+    {
+        return view('user.order-success');
+    }
 }

@@ -15,7 +15,7 @@ class Transaksi extends Model
     
 
     protected $fillable = [
-        'tanggal', 'id_menu', 'jumlah', 'total'
+        'kode_pesanan', 'tanggal', 'id_menu', 'jumlah', 'total'
     ];
 
     // model transaksi
